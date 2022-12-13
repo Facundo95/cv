@@ -1,23 +1,33 @@
-CV = cv
-CV-SRC = $(wildcard *.tex)
-CV-BIB = $(wildcard *.bib)
+TEXFILE = cv.tex
+PDFFILE = cv.pdf
 
-TEXC := xelatex
-TEXC_OPTS += -shell-escape
+BASEDIR=$(CURDIR)
+OUTPUTDIR=$(BASEDIR)/output
 
-.PHONY: clean
+GITHUB_PAGES_BRANCH=master
 
-run: $(CV).pdf
+help:
+	@echo 'Makefile for automatic LaTeX compilation                                  '
+	@echo '                                                                          '
+	@echo 'Usage:                                                                    '
+	@echo '   make clean                          remove the generated files         '
+	@echo '   make build	                        generate files										 '
+	@echo '   make github                         upload the web site via gh-pages   '
+	@echo '                                                                          '
 
-$(CV).pdf : $(CV).tex $(CV-SRC) $(CV-BIB)
-	$(TEXC) $(TEXC_OPTS) $(CV).tex -draftmode
-	bibtex $(CV).aux
-	$(TEXC) $(TEXC_OPTS) $(CV).tex 
-	$(TEXC) $(TEXC_OPTS) $(CV).tex 
-
-$(CV).aux : $(CV).aux $(CV-SRC) $(CV-BIB)
-	$(TEXC) $(TEXC_OPTS) $(CV).tex -draftmode
-	$(TEXC) $(TEXC_OPTS) $(CV).tex -draftmode
 
 clean:
-	@rm -f *.aux *log *nav *snm *toc *out *blg *bbl 
+	[ ! -d $(OUTPUTDIR) ] || rm -rf $(OUTPUTDIR)
+
+build:
+	mkdir $(OUTPUTDIR)
+	sudo docker run -it -v $(BASEDIR):/var/texlive texlive sh -c "pdflatex $(TEXFILE)"
+	mv $(PDFFILE) $(OUTPUTDIR)
+	cp CNAME $(OUTPUTDIR)
+	cp index.html $(OUTPUTDIR)
+
+github:
+	ghp-import -n $(OUTPUTDIR)
+	@git push -fq https://${GH_TOKEN}@github.com/$(TRAVIS_REPO_SLUG).git gh-pages > /dev/null
+
+.PHONY: help clean build github
