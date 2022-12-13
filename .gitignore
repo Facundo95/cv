@@ -1,8 +1,4 @@
-.directory
-*.aux
-*.bbl
-*.blg
-*.log
-*.out
-*.bcf
-*.xml
+*.pyc
+*.tar.gz
+/env/
+/output/
